@@ -1,10 +1,4 @@
-/**
- *  Project 1
- *  storage.c
- *
- *  Author: CS3113
- *
- */
+//Camron Bartlow Project 2
 
 #include "storage.h"
 

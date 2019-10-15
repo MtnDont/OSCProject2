@@ -1,4 +1,5 @@
 EXEC=project2
+SERV=server
 CFLAGS = -c -O3 -Wall
 LIBS = storage.o
 PIPES = pipe_in pipe_out
@@ -12,6 +13,9 @@ all: $(EXEC)
 
 $(EXEC): $(EXEC).o $(LIBS)
 	gcc $(EXEC).o $(LIBS) -o $(EXEC)
+
+$(SERV): $(EXEC).o $(LIBS)
+	gcc $(SERV).o $(LIBS) -o $(SERV)
 
 clean:
 	rm -f *.o $(EXEC) $(LIBS) $(PIPES)

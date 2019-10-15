@@ -1,6 +1,5 @@
-/**
-   API for remote storage.  Identical API as provided by the local storage implementation 
- */
+//Camron Bartlow Project 2
+
 #include <string.h>
 #include "storage_remote.h"
 #include "storage_common.h"
@@ -32,10 +31,13 @@ int close_storage(STORAGE *storage)
 {
   // Create the shutdown message
   HEADER header;
+  header.type = SHUTDOWN;
+  header.len_message = 0;
+  header.location = -1;
+  header.len_buffer = -1;
 
+  write(storage.fd_to_storage, header, sizeof(header));
 
-
-  
   // Free the storage struction
   free(storage);
 
@@ -48,8 +50,17 @@ int close_storage(STORAGE *storage)
  */
 int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 {
+  HEADER header;
+  header.type = READ_REQUEST;
+  header.len_message = len;
+  header.location = location;
+  header.len_buffer = buf;
 
+  write(storage.fd_to_storage, header, sizeof(header));
+  //Wait for DATA message back
+  while () {
 
+  }
 
   // Success
   return(len);

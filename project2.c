@@ -1,12 +1,4 @@
-/**
- *  Project 1
- *
- *  Author: CS3113
- *
- * Notes:
- * - Includes buffer bounds checking (this was not a requirement listed in the specification,
- *  but it does make for more robust code)
- */
+//Camron Bartlow Project 2
 
 #include <stdio.h>
 #include <string.h>
