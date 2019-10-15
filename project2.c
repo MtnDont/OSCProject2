@@ -2,7 +2,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "storage.h"
+#include "storage_remote.h"
+#include "comms.h"
 
 // Constants
 const int MAX_ARGS = 16;
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
   }
 
   // Interaction loop: loop until EOF
-  while(fgets(in_buffer, INBUFSIZE, stdin) != NULL){
+  while(fgets(in_buffer, INBUFSIZE, stdin) != NULL) {
 
     // Parse the arguments
     arg = args;

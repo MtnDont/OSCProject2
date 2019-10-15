@@ -24,24 +24,45 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Waiting for connection with client...\n");
 
     // Open to_storage pipe
-    fd_in = open("pipe_in", O_RDONLY);
-    fd_out = open("pipe_out", O_WRONLY);
-    if (fd_in < 0 || fd_out < 0) {
-      perror("Error opening pipes");
-      exit(-1);
-    }
+    fd_in = open("pipe_in", RDONLY);
+    fd_out = open("pipe_out", WRONLY);
 
-    while (header.type != INIT_CONNECTION)
+    read(fd_in, header, sizeof(header));
+    while (header.type != INIT_CONNECTION) {
       read(fd_in, header, sizeof(header));
+    }
+    read(fd_in, buffer, header.len_buffer);
+    storage = init_storage(buffer);
+
+    //Wait for shutdown message
     while(header.type != SHUTDOWN) {
+      //Read pipe in
       read(fd_in, header, sizeof(header));
 
       if (header.type == WRITE_REQUEST) {
-        write();
+        //Generate and send HEADER
+        header_out.type = ACKNOWLEDGE;
+        header_out.len_message = 0;
+        header_out.location = -1;
+        header_out.len_buffer = -1;
+        write(fd_out, header_out, sizeof(header_out));
+
+        //Write to file from HEADER parsed from pipe_in
+        read(fd_in, buffer, sizeof(header.len_buffer));
+        //write(storage->fd, buffer, header.len_buffer);
+        put_bytes(storage, buffer, header.location, header.len_message);
       }
       else if (header.type == READ_REQUEST) {
+        //Generate and send HEADER
+        
         header_out.type = DATA;
+        header_out.len_message = 0; //This needs to be length of ret
+        header_out.location = -1;
+        header_out.len_buffer = -1;
         write(fd_out, header_out, sizeof(header_out));
+
+        int ret = get_bytes(storage, buffer, header.location, header.len_message);
+        write(fd_out, ret, sizeof(ret));
       }
     }
 
