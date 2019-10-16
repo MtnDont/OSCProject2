@@ -58,8 +58,8 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 
   write(storage.fd_to_storage, header, sizeof(header));
   //Wait for DATA message back
-  while () {
-
+  while (header.type != DATA) {
+    read();
   }
 
   // Success
@@ -68,7 +68,7 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 
 
 /**
-   Write bytes to the storae
+   Write bytes to the storage
 
    Send the write request message + the data
  */

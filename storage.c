@@ -109,7 +109,7 @@ int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     return(-1);
   };
 
-  // Write te  bytes to the  file
+  // Write the bytes to the file
   if((ret = write(storage->fd, buf, len)) < 0){
     // There was an error
     fprintf(stderr, "Error reading fd\n");
