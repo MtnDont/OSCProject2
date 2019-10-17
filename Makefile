@@ -1,4 +1,4 @@
-all: project2 server
+all: project2 server pipes
 
 project2: project2.c
 	gcc project2.c storage_remote.c -o project2
