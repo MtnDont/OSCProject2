@@ -14,11 +14,24 @@ STORAGE * init_storage(char * name)
 {
   // Create space for the STORAGE object
   STORAGE *s = malloc(sizeof(STORAGE));
+  HEADER header;
 
+  int fdin = open(PIPE_NAME_TO_STORAGE, WRONLY);
+  int fdout = open(PIPE_NAME_FROM_STORAGE, RDONLY);
 
+  if (fdin <= 0 || fdout <= 0) {
+    fprintf(stderr, "Unable to open %s\n", name);
+    return NULL;
+  }
+  s->fd_to_storage = fdin;
+  s->fd_from_storage = fdout;
 
+  read(fdout, header, sizeof(header));
+  while (header.type != ACKNOWLEDGE) {
+    read(fdout, header, sizeof(header));
+  }
 
-  // All okay 
+  // All okay
   return s;
 };
 
@@ -56,10 +69,12 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
   header.location = location;
   header.len_buffer = buf;
 
-  write(storage.fd_to_storage, header, sizeof(header));
+  write(storage->fd_to_storage, header, sizeof(header));
+
+  read(storage->fd_from_storage, header, sizeof(header));
   //Wait for DATA message back
   while (header.type != DATA) {
-    read();
+    read(storage->fd_from_storage, header, sizeof(header));
   }
 
   // Success
@@ -74,9 +89,19 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
  */
 int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 {
+  HEADER head = {WRITE_REQUEST, sizeof(buf)/sizeof(char), location, len};
+  /*head.type = WRITE_REQUEST;
+  head.len_message = sizeof(buf)/sizeof(char);
+  head.location = location;
+  head.len_buffer = len;*/
 
+  write(storage->fd_to_storage, head, sizeof(head));
+  write(storage->fd_to_storage, buf, sizeof(buf));
 
-
+  read(storage->fd_from_storage, header, sizeof(header));
+  while (header.type != ACKNOWLEDGE) {
+    read(storage->fd_from_storage, header, sizeof(header));
+  }
   // Success
   return(len);
 };

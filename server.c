@@ -9,6 +9,13 @@
 
 #define BUFSIZE 200
 
+void sendAcknowledge(HEADER* head) {
+  head->type = ACKNOWLEDGE;
+  head->len_message = 0;
+  head->location = -1;
+  head->len_buffer = -1;
+}
+
 int main(int argc, char** argv) {
   unsigned char buffer[BUFSIZE];
   HEADER header;
@@ -24,14 +31,23 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Waiting for connection with client...\n");
 
     // Open to_storage pipe
-    fd_in = open("pipe_in", RDONLY);
-    fd_out = open("pipe_out", WRONLY);
+    fd_in = open(PIPE_NAME_TO_STORAGE, RDONLY);
+    fd_out = open(PIPE_NAME_FROM_STORAGE, WRONLY);
 
     read(fd_in, header, sizeof(header));
     while (header.type != INIT_CONNECTION) {
       read(fd_in, header, sizeof(header));
     }
     read(fd_in, buffer, header.len_buffer);
+
+    sendAcknowledge(&header_out);
+
+    /*header_out.type = ACKNOWLEDGE;
+    header_out.len_message = 0;
+    header_out.location = -1;
+    header_out.len_buffer = -1;*/
+    write(fd_out, header_out, sizeof(header_out));
+
     storage = init_storage(buffer);
 
     //Wait for shutdown message
@@ -41,10 +57,11 @@ int main(int argc, char** argv) {
 
       if (header.type == WRITE_REQUEST) {
         //Generate and send HEADER
-        header_out.type = ACKNOWLEDGE;
+        /*header_out.type = ACKNOWLEDGE;
         header_out.len_message = 0;
         header_out.location = -1;
-        header_out.len_buffer = -1;
+        header_out.len_buffer = -1;*/
+        sendAcknowledge(header_out);
         write(fd_out, header_out, sizeof(header_out));
 
         //Write to file from HEADER parsed from pipe_in
