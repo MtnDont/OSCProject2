@@ -1,39 +1,16 @@
-EXEC=project2
-SERV=server
-CFLAGS = -c -O3 -Wall
-LIBS = storage.o
-PIPES = pipe_in pipe_out
-TEST_DIR_1 = tests_public
-OTHERS = storage.h
+all: project2 server
 
-all: $(EXEC)
+project2: project2.c
+	gcc project2.c storage_remote.c -o project2
 
-.c.o:
-	$(CC) $(CFLAGS) $< -o $@
-
-$(EXEC): $(EXEC).o $(LIBS)
-	gcc $(EXEC).o $(LIBS) -o $(EXEC)
-
-$(SERV): $(EXEC).o $(LIBS)
-	gcc $(SERV).o $(LIBS) -o $(SERV)
+server: server.c
+	gcc server.c storage.c -o server
 
 clean:
-	rm -f *.o $(EXEC) $(LIBS) $(PIPES)
+	rm -f *.o project2 server pipe_in pipe_out
 
 zip:
-	zip project2.zip README.txt project2.c Makefile storage.c storage.h
-
-tar_tests:
-	tar -cvf project2_dist.tar $(TEST_DIR_1) $(OTHERS)
-
-install:
-	cp project2_dist.tar ~/notepad/classes/cs3113/export/projects
-
-tar_release:
-	tar -cvf project2_release.tar Makefile *.h *.c
-
-install_release:
-	cp project2_release.tar ~/notepad/classes/cs3113/export/projects
+	zip project2.zip README.txt *.c *.h Makefile
 
 pipes:
-	mkfifo $(PIPES)
+	mkfifo pipe_in pipe_out

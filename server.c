@@ -31,13 +31,18 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Waiting for connection with client...\n");
 
     // Open to_storage pipe
-    fd_in = open(PIPE_NAME_TO_STORAGE, RDONLY);
-    fd_out = open(PIPE_NAME_FROM_STORAGE, WRONLY);
+    fd_in = open(PIPE_NAME_TO_STORAGE, O_RDONLY);
+    fd_out = open(PIPE_NAME_FROM_STORAGE, O_WRONLY);
 
-    read(fd_in, header, sizeof(header));
-    while (header.type != INIT_CONNECTION) {
-      read(fd_in, header, sizeof(header));
+    fprintf(stderr, "Pipes open\n");
+
+    read(fd_in, &header, sizeof(HEADER));
+    if (header.type != INIT_CONNECTION) {
+      fprintf(stderr, "Unexpected header");
     }
+    /*while (header.type != INIT_CONNECTION) {
+      read(fd_in, &header, sizeof(HEADER));
+    }*/
     read(fd_in, buffer, header.len_buffer);
 
     sendAcknowledge(&header_out);
@@ -46,14 +51,14 @@ int main(int argc, char** argv) {
     header_out.len_message = 0;
     header_out.location = -1;
     header_out.len_buffer = -1;*/
-    write(fd_out, header_out, sizeof(header_out));
+    write(fd_out, &header_out, sizeof(HEADER));
 
     storage = init_storage(buffer);
 
     //Wait for shutdown message
     while(header.type != SHUTDOWN) {
       //Read pipe in
-      read(fd_in, header, sizeof(header));
+      read(fd_in, &header, sizeof(HEADER));
 
       if (header.type == WRITE_REQUEST) {
         //Generate and send HEADER
@@ -61,8 +66,8 @@ int main(int argc, char** argv) {
         header_out.len_message = 0;
         header_out.location = -1;
         header_out.len_buffer = -1;*/
-        sendAcknowledge(header_out);
-        write(fd_out, header_out, sizeof(header_out));
+        sendAcknowledge(&header_out);
+        write(fd_out, &header_out, sizeof(HEADER));
 
         //Write to file from HEADER parsed from pipe_in
         read(fd_in, buffer, sizeof(header.len_buffer));
@@ -76,12 +81,15 @@ int main(int argc, char** argv) {
         header_out.len_message = 0; //This needs to be length of ret
         header_out.location = -1;
         header_out.len_buffer = -1;
-        write(fd_out, header_out, sizeof(header_out));
+        write(fd_out, &header_out, sizeof(HEADER));
 
         int ret = get_bytes(storage, buffer, header.location, header.len_message);
-        write(fd_out, ret, sizeof(ret));
+        write(fd_out, &ret, sizeof(ret));
       }
     }
+    sendAcknowledge(&header_out);
+    write(fd_out, &header_out, sizeof(HEADER));
+    sleep(1);
 
     // We broke out because of a disconnection: clean up
     fprintf(stderr, "Closing connection\n");

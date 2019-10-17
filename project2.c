@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "storage_remote.h"
-#include "comms.h"
 
 // Constants
 const int MAX_ARGS = 16;
