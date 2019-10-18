@@ -35,12 +35,12 @@ int main(int argc, char** argv) {
     fd_in = open(PIPE_NAME_TO_STORAGE, O_RDONLY);
     fd_out = open(PIPE_NAME_FROM_STORAGE, O_WRONLY);
 
-    read(fd_in, &header_init, sizeof(HEADER));
-    if (header_init.type != INIT_CONNECTION) {
+    read(fd_in, &head_init, sizeof(HEADER));
+    if (head_init.type != INIT_CONNECTION) {
       fprintf(stderr, "Unexpected header\n");
     }
 
-    read(fd_in, buffer, header_init.len_buffer);
+    read(fd_in, buffer, head_init.len_buffer);
 
     sendAcknowledge(&header_out);
     write(fd_out, &header_out, sizeof(HEADER));
