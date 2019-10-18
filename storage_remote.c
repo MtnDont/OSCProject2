@@ -22,7 +22,7 @@ STORAGE * init_storage(char * name)
   int fdin = open(PIPE_NAME_TO_STORAGE, O_WRONLY);
   int fdout = open(PIPE_NAME_FROM_STORAGE, O_RDONLY);
 
-  fprintf(stderr, "Pipes open\n");
+  //fprintf(stderr, "Pipes open\n");
 
   if (fdin <= 0 || fdout <= 0) {
     fprintf(stderr, "Unable to open %s\n", name);
