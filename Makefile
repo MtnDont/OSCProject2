@@ -1,13 +1,15 @@
-all: project2 server pipes
+all: project2 server
 
-project2: project2.c storage_remote.c
+project2: project2.c
 	gcc project2.c storage_remote.c -o project2
 
-server: server.c storage.c
+server: server.c
 	gcc server.c storage.c -o server
 
 clean:
-	rm -f *.o project2 server pipe_in pipe_out
+	rm -f *.o project2
+        rm -f *.bin server
+        rm -f pipe_in pipe_out
 
 zip:
 	zip project2.zip README.txt *.c *.h Makefile
