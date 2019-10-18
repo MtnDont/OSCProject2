@@ -54,14 +54,12 @@ int main(int argc, char** argv) {
 
       if (header.type == WRITE_REQUEST) {
         //Write to file from HEADER parsed from pipe_in
-        if (read(fd_in, buffer, header.len_buffer) < 0) {
-          fprintf(stderr, "Error reading fd\n");
-        }
+        header_out.type = ACKNOWLEDGE;
+        read(fd_in, buffer, header.len_buffer);
 
         put_bytes(storage, buffer, header.location, header.len_buffer);
 
-        sendAcknowledge(&header_out);
-        write(fd_out, &header_out, sizeof(HEADER));
+        int foob = write(fd_out, &header_out, sizeof(HEADER));
       }
       else if (header.type == READ_REQUEST) {
         int ret = get_bytes(storage, buffer, header.location, header.len_buffer);
@@ -69,15 +67,14 @@ int main(int argc, char** argv) {
         //Generate and send HEADER
         header_out.type = DATA;
         header_out.len_message = ret;
-        header_out.location = -1;
         header_out.len_buffer = ret;
-        write(fd_out, &header_out, sizeof(HEADER));
+        int foob = write(fd_out, &header_out, sizeof(HEADER));
 
-        write(fd_out, buffer, ret);
+        int ar = write(fd_out, buffer, header_out.len_buffer);
       }
       else if (header.type == SHUTDOWN) {
         sendAcknowledge(&header_out);
-        write(fd_out, &header_out, sizeof(HEADER));
+        int foob = write(fd_out, &header_out, sizeof(HEADER));
         sleep(1);
         break;
       }
