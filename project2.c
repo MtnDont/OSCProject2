@@ -32,8 +32,20 @@ int main(int argc, char **argv)
 
   // Open the storage
   STORAGE * storage;
-  if ((storage = init_storage("storage.bin")) == NULL) {
-    fprintf(stderr, "Error opening file.");
+  if (argc == 1) {
+    if ((storage = init_storage("storage.bin")) == NULL) {
+      fprintf(stderr, "Error opening file.");
+      exit(-1);
+    }
+  }
+  else if (argc == 2) {
+    if ((storage = init_storage(argv[1])) == NULL) {
+      fprintf(stderr, "Error opening file.");
+      exit(-1);
+    }
+  }
+  else {
+    fprintf(stderr, "Too many parameters");
     exit(-1);
   }
 
