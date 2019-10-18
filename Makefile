@@ -8,8 +8,8 @@ server: server.c
 
 clean:
 	rm -f *.o project2
-        rm -f *.bin server
-        rm -f pipe_in pipe_out
+	rm -f *.bin server
+	rm -f pipe_in pipe_out
 
 zip:
 	zip project2.zip README.txt *.c *.h Makefile
