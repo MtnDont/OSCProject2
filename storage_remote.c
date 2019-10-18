@@ -90,7 +90,7 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Unexpected header");
     return(-1);
   }
-  read(storage->fd_from_storage, buf, head_in.len_message);
+  read(storage->fd_from_storage, buf+location, head_in.len_message);
 
   // Success
   return(head_in.len_message);
@@ -112,7 +112,7 @@ int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
   head.len_buffer = len;
 
   int foob = write(storage->fd_to_storage, &head, sizeof(HEADER));
-  foob = write(storage->fd_to_storage, buf, len);
+  foob = write(storage->fd_to_storage, buf+location, len);
 
   read(storage->fd_from_storage, &header, sizeof(HEADER));
   if (header.type != ACKNOWLEDGE) {

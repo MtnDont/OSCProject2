@@ -18,6 +18,7 @@ void sendAcknowledge(HEADER* head) {
 
 int main(int argc, char** argv) {
   unsigned char buffer[BUFSIZE] = { 0 };
+  unsigned char nameBuff[BUFSIZE] = { 0 };
   HEADER header;
   HEADER header_out;
   HEADER head_init;
@@ -26,6 +27,7 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < BUFSIZE; i++) {
     buffer[i] = 0;
+    nameBuff[i] = 0;
   }
 
   int fd_out;
@@ -40,55 +42,54 @@ int main(int argc, char** argv) {
     fd_out = open(PIPE_NAME_FROM_STORAGE, O_WRONLY);
 
     read(fd_in, &head_init, sizeof(HEADER));
-    if (head_init.type != INIT_CONNECTION) {
-      fprintf(stderr, "Unexpected header\n");
+    if (head_init.type == INIT_CONNECTION) {
+
+      read(fd_in, &nameBuff, head_init.len_message);
+
+      sendAcknowledge(&header_out);
+      int foob = write(fd_out, &header_out, sizeof(HEADER));
+
+      storage = init_storage(nameBuff);
+
+      //Wait for shutdown message
+      while(1) {
+        //Read pipe in
+        read(fd_in, &header, sizeof(HEADER));
+
+        if (header.type == WRITE_REQUEST) {
+          //Write to file from HEADER parsed from pipe_in
+          header_out.type = ACKNOWLEDGE;
+          read(fd_in, buffer, header.len_buffer);
+
+          int out = put_bytes(storage, buffer, header.location, header.len_buffer);
+
+          int foob = write(fd_out, &header_out, sizeof(HEADER));
+        }
+        else if (header.type == READ_REQUEST) {
+          int ret = get_bytes(storage, buffer, header.location, header.len_buffer);
+
+          //Generate and send HEADER
+          header_out.type = DATA;
+          header_out.len_message = ret;
+          header_out.len_buffer = ret;
+          int foob = write(fd_out, &header_out, sizeof(HEADER));
+
+          int ar = write(fd_out, buffer, header_out.len_buffer);
+        }
+        else if (header.type == SHUTDOWN) {
+          header_out.type = ACKNOWLEDGE;
+          int foob = write(fd_out, &header_out, sizeof(HEADER));
+          sleep(1);
+          break;
+        }
+      }
+
+      // We broke out because of a disconnection: clean up
+      fprintf(stderr, "Closing connection\n");
+      close(fd_in);
+      close(fd_out);
+      close_storage(storage);
     }
-
-    read(fd_in, buffer, head_init.len_buffer);
-
-    sendAcknowledge(&header_out);
-    write(fd_out, &header_out, sizeof(HEADER));
-
-    storage = init_storage(buffer);
-
-    //Wait for shutdown message
-    while(1) {
-      //Read pipe in
-      read(fd_in, &header, sizeof(HEADER));
-
-      if (header.type == WRITE_REQUEST) {
-        //Write to file from HEADER parsed from pipe_in
-        header_out.type = ACKNOWLEDGE;
-        read(fd_in, buffer, header.len_buffer);
-
-        put_bytes(storage, buffer, header.location, header.len_buffer);
-
-        int foob = write(fd_out, &header_out, sizeof(HEADER));
-      }
-      else if (header.type == READ_REQUEST) {
-        int ret = get_bytes(storage, buffer, header.location, header.len_buffer);
-
-        //Generate and send HEADER
-        header_out.type = DATA;
-        header_out.len_message = ret;
-        header_out.len_buffer = ret;
-        int foob = write(fd_out, &header_out, sizeof(HEADER));
-
-        int ar = write(fd_out, buffer, header_out.len_buffer);
-      }
-      else if (header.type == SHUTDOWN) {
-        sendAcknowledge(&header_out);
-        int foob = write(fd_out, &header_out, sizeof(HEADER));
-        sleep(1);
-        break;
-      }
-    }
-
-    // We broke out because of a disconnection: clean up
-    fprintf(stderr, "Closing connection\n");
-    close(fd_in);
-    close(fd_out);
-    close_storage(storage);
   }
 
   // Should never reach here
