@@ -1,1 +1,7 @@
 tests/
+project2
+server
+pipe_in
+pipe_out
+*.o
+
