@@ -36,19 +36,10 @@ STORAGE * init_storage(char * name)
   head_out.location = -1;
   head_out.len_buffer = 128;
 
-  if (write(fdin, &head_out, sizeof(HEADER)) < 0) {
-    fprintf(stderr, "Error writing to pipe");
-    return NULL;
-  }
-  if (write(fdin, name, strlen(name)+1) < 0) {
-    fprintf(stderr, "Error writing to pipe");
-    return NULL;
-  }
+  write(fdin, &head_out, sizeof(HEADER));
+  write(fdin, name, strlen(name)+1);
 
-  if (read(fdout, &header, sizeof(HEADER)) < 0) {
-    fprintf(stderr, "Error reading pipe");
-    return NULL;
-  }
+  read(fdout, &header, sizeof(HEADER));
   if (header.type != ACKNOWLEDGE) {
     fprintf(stderr, "Unexpected header\n");
     return NULL;
