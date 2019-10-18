@@ -31,15 +31,13 @@ STORAGE * init_storage(char * name)
   s->fd_to_storage = fdin;
   s->fd_from_storage = fdout;
 
-  //head_out = {INIT_CONNECTION, sizeof(name)/sizeof(char), -1, sizeof(name)};
   head_out.type = INIT_CONNECTION;
-  head_out.len_message = sizeof(name)/sizeof(char);
+  head_out.len_message = sizeof(name);
   head_out.location = -1;
-  head_out.len_buffer = sizeof(name);
-
+  head_out.len_buffer = 128;
 
   write(fdin, &head_out, sizeof(HEADER));
-  write(fdin, name, sizeof(name));
+  write(fdin, name, strlen(name)+1);
 
   read(fdout, &header, sizeof(HEADER));
   if (header.type != ACKNOWLEDGE) {
@@ -94,7 +92,7 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
   header.type = READ_REQUEST;
   header.len_message = len;
   header.location = location;
-  header.len_buffer = sizeof(buf);
+  header.len_buffer = len;
 
   write(storage->fd_to_storage, &header, sizeof(HEADER));
 
@@ -104,6 +102,7 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Unexpected header");
     return(-1);
   }
+  read(storage->fd_from_storage, buf+location, head_in.len_message);
 
   // Success
   return(len);
@@ -118,18 +117,22 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 {
   HEADER header;
-  HEADER head = {WRITE_REQUEST, sizeof(buf)/sizeof(char), location, len};
-  /*head.type = WRITE_REQUEST;
-  head.len_message = sizeof(buf)/sizeof(char);
+  HEADER head;
+  head.type = WRITE_REQUEST;
+  head.len_message = sizeof(buf);
   head.location = location;
-  head.len_buffer = len;*/
+  head.len_buffer = len;
 
   write(storage->fd_to_storage, &head, sizeof(HEADER));
-  write(storage->fd_to_storage, buf, sizeof(buf));
+  if (write(storage->fd_to_storage, buf+location, len) < 0) {
+    fprintf(stderr, "Error reading fd\n");
+    return(-1);
+  }
 
   read(storage->fd_from_storage, &header, sizeof(HEADER));
-  while (header.type != ACKNOWLEDGE) {
-    read(storage->fd_from_storage, &header, sizeof(HEADER));
+  if (header.type != ACKNOWLEDGE) {
+    fprintf(stderr, "Unexpected header\n");
+    return(-1);
   }
   // Success
   return(len);

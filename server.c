@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFSIZE 200
+#define BUFSIZE 256
 
 void sendAcknowledge(HEADER* head) {
   head->type = ACKNOWLEDGE;
@@ -38,19 +38,12 @@ int main(int argc, char** argv) {
 
     read(fd_in, &header, sizeof(HEADER));
     if (header.type != INIT_CONNECTION) {
-      fprintf(stderr, "Unexpected header");
+      fprintf(stderr, "Unexpected header\n");
     }
-    /*while (header.type != INIT_CONNECTION) {
-      read(fd_in, &header, sizeof(HEADER));
-    }*/
+
     read(fd_in, buffer, header.len_buffer);
 
     sendAcknowledge(&header_out);
-
-    /*header_out.type = ACKNOWLEDGE;
-    header_out.len_message = 0;
-    header_out.location = -1;
-    header_out.len_buffer = -1;*/
     write(fd_out, &header_out, sizeof(HEADER));
 
     storage = init_storage(buffer);
@@ -61,30 +54,27 @@ int main(int argc, char** argv) {
       read(fd_in, &header, sizeof(HEADER));
 
       if (header.type == WRITE_REQUEST) {
-        //Generate and send HEADER
-        /*header_out.type = ACKNOWLEDGE;
-        header_out.len_message = 0;
-        header_out.location = -1;
-        header_out.len_buffer = -1;*/
+        //Write to file from HEADER parsed from pipe_in
+        if (read(fd_in, buffer, header.len_buffer) < 0) {
+          fprintf(stderr, "Error reading fd\n");
+        }
+
+        put_bytes(storage, buffer, header.location, header.len_buffer);
+
         sendAcknowledge(&header_out);
         write(fd_out, &header_out, sizeof(HEADER));
-
-        //Write to file from HEADER parsed from pipe_in
-        read(fd_in, buffer, sizeof(header.len_buffer));
-        //write(storage->fd, buffer, header.len_buffer);
-        put_bytes(storage, buffer, header.location, header.len_message);
       }
       else if (header.type == READ_REQUEST) {
+        int ret = get_bytes(storage, buffer, header.location, header.len_buffer);
+
         //Generate and send HEADER
-        
         header_out.type = DATA;
-        header_out.len_message = 0; //This needs to be length of ret
+        header_out.len_message = ret;
         header_out.location = -1;
         header_out.len_buffer = -1;
         write(fd_out, &header_out, sizeof(HEADER));
 
-        int ret = get_bytes(storage, buffer, header.location, header.len_message);
-        write(fd_out, &ret, sizeof(ret));
+        write(fd_out, buffer, ret);
       }
     }
     sendAcknowledge(&header_out);
