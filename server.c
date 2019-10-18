@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFSIZE 256
+#define BUFSIZE 200
 
 void sendAcknowledge(HEADER* head) {
   head->type = ACKNOWLEDGE;
@@ -17,12 +17,16 @@ void sendAcknowledge(HEADER* head) {
 }
 
 int main(int argc, char** argv) {
-  unsigned char buffer[BUFSIZE];
+  unsigned char buffer[BUFSIZE] = { 0 };
   HEADER header;
   HEADER header_out;
   HEADER head_init;
   int ret;
   STORAGE *storage;
+
+  for (int i = 0; i < BUFSIZE; i++) {
+    buffer[i] = 0;
+  }
 
   int fd_out;
   int fd_in;
