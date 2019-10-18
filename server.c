@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   unsigned char buffer[BUFSIZE];
   HEADER header;
   HEADER header_out;
-  //HEADER head_init;
+  HEADER head_init;
   int ret;
   STORAGE *storage;
 
@@ -35,14 +35,12 @@ int main(int argc, char** argv) {
     fd_in = open(PIPE_NAME_TO_STORAGE, O_RDONLY);
     fd_out = open(PIPE_NAME_FROM_STORAGE, O_WRONLY);
 
-    //fprintf(stderr, "Pipes open\n");
-
-    read(fd_in, &header, sizeof(HEADER));
-    if (header.type != INIT_CONNECTION) {
+    read(fd_in, &header_init, sizeof(HEADER));
+    if (header_init.type != INIT_CONNECTION) {
       fprintf(stderr, "Unexpected header\n");
     }
 
-    read(fd_in, buffer, header.len_buffer);
+    read(fd_in, buffer, header_init.len_buffer);
 
     sendAcknowledge(&header_out);
     write(fd_out, &header_out, sizeof(HEADER));
