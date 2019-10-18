@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
         header_out.type = DATA;
         header_out.len_message = ret;
         header_out.location = -1;
-        header_out.len_buffer = -1;
+        header_out.len_buffer = ret;
         write(fd_out, &header_out, sizeof(HEADER));
 
         write(fd_out, buffer, ret);

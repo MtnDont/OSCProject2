@@ -1,10 +1,13 @@
 all: project2 server pipes
 
-project2: project2.c
-	gcc project2.c storage_remote.c -o project2
+.c.o:
+	gcc -c -O3 -Wall $< -o $@
 
-server: server.c
-	gcc server.c storage.c -o server
+project2: project2.o storage_remote.o
+	gcc project2.o storage_remote.o -o project2
+
+server: server.o storage.o
+	gcc server.o storage.o -o server
 
 clean:
 	rm -f *.o project2 server pipe_in pipe_out
