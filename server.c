@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     storage = init_storage(buffer);
 
     //Wait for shutdown message
-    while(header.type != SHUTDOWN) {
+    while(1) {
       //Read pipe in
       read(fd_in, &header, sizeof(HEADER));
 
@@ -75,10 +75,13 @@ int main(int argc, char** argv) {
 
         write(fd_out, buffer, ret);
       }
+      else if (header.type == SHUTDOWN) {
+        sendAcknowledge(&header_out);
+        write(fd_out, &header_out, sizeof(HEADER));
+        sleep(1);
+        break;
+      }
     }
-    sendAcknowledge(&header_out);
-    write(fd_out, &header_out, sizeof(HEADER));
-    sleep(1);
 
     // We broke out because of a disconnection: clean up
     fprintf(stderr, "Closing connection\n");
